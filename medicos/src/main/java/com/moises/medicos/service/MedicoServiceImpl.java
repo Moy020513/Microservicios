@@ -1,6 +1,7 @@
 package com.moises.medicos.service;
 
 
+import com.moises.commons.client.CitaClient;
 import com.moises.commons.dto.medicos.MedicoRequest;
 import com.moises.commons.dto.medicos.MedicoResponse;
 import com.moises.commons.enums.DisponibilidadMedico;
@@ -25,6 +26,8 @@ public class MedicoServiceImpl implements MedicoService {
 
     private final MedicoRepository medicoRepository;
     private final MedicoMapper medicoMapper;
+
+    private final CitaClient citaClient;
 
     @Override
     public void actualizarDisponibilidadMedico(Long idMedico, Long idDisponibilidad) {
@@ -53,6 +56,7 @@ public class MedicoServiceImpl implements MedicoService {
 
     @Override
     public MedicoResponse obtenerPorId(Long id) {
+        Medico medico = obtenerMedicoPorEstado(id, EstadoRegistro.ACTIVO);
         return medicoMapper.entidadAResponse(obtenerMedicoActivoOException(id));
     }
 
@@ -69,6 +73,7 @@ public class MedicoServiceImpl implements MedicoService {
     public MedicoResponse registrar(MedicoRequest request) {
         log.info("Registrando nuevo médico sin estado con id: {}", request.nombre());
         validarDatosUnicos(request);
+        EspecialidadMedico especialidad = EspecialidadMedico.obtenerEspecialidadPorCodigo(request.idEspecialidad());
         Medico medico = medicoMapper.requestAEntidad(request);
         medico.actualizarEspecialidad(
                 EspecialidadMedico.obtenerEspecialidadPorCodigo(request.idEspecialidad())
@@ -97,15 +102,23 @@ public class MedicoServiceImpl implements MedicoService {
                 EspecialidadMedico.obtenerEspecialidadPorCodigo(request.idEspecialidad())
         );
 
+        medico = medicoRepository.save(medico);
         log.info("Médico actualizado exitósamente");
         return medicoMapper.entidadAResponse(medico);
     }
 
+
+
+
+
     @Override
     public void eliminar(Long id) {
         Medico medico = obtenerMedicoActivoOException(id);
+        validarMedicoSinCitasActivas(id);
         log.info("Eliminando médico con id: {}", id);
         medico.eliminar();
+        medicoRepository.save(medico);
+        log.info("Médico eliminado correctamente. Id={}", id);
 
     }
 
@@ -115,6 +128,24 @@ public class MedicoServiceImpl implements MedicoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Médico activo no encontrado con id: " + id
         ));
+    }
+
+    private Medico obtenerMedicoPorEstado(Long id, EstadoRegistro estado){
+        log.info("Obteniendo médico con estado: {} e Id: {}", estado, id);
+        return medicoRepository
+                .findByIdAndEstadoRegistro(id, estado)
+                .orElseThrow(() ->
+                        new RecursoNoEncontradoException(
+                                "Médico " + estado + " no encontrado con id: " + id));
+    }
+
+    private void validarCambiosUnicos(Long id, MedicoRequest request) {
+        if (medicoRepository.existsByEmailIgnoreCaseAndEstadoRegistroAndIdNot(request.email().trim(), EstadoRegistro.ACTIVO, id))
+            throw new IllegalArgumentException("Ya existe un médico activo con ese correo");
+        if (medicoRepository.existsByTelefonoAndEstadoRegistroAndIdNot(request.telefono().trim(), EstadoRegistro.ACTIVO, id))
+            throw new IllegalArgumentException("Ya existe un médico activo con ese teléfono");
+        if (medicoRepository.existsByCedulaProfesionalIgnoreCaseAndEstadoRegistroAndIdNot(request.cedulaProfesional().trim(), EstadoRegistro.ACTIVO, id))
+            throw new IllegalArgumentException("Ya existe un médico activo con esa cédula profesional");
     }
 
     private void validarDatosUnicos(MedicoRequest request) {
@@ -155,5 +186,16 @@ public class MedicoServiceImpl implements MedicoService {
                 request.cedulaProfesional().trim(), EstadoRegistro.ACTIVO, id))
             throw new IllegalArgumentException("Ya existe un médico activo registrado con la cédula profesional: "
                     + request.cedulaProfesional());
+    }
+
+    private void validarMedicoSinCitasActivas(Long idMedico){
+
+        log.info("Validando que el médico {} no tenga citas confirmadas o en curso", idMedico);
+
+        if(Boolean.TRUE.equals(citaClient.CitasActivasMedico(idMedico))){
+            throw new IllegalStateException(
+                    "El médico tiene citas confirmadas o en curso."
+            );
+        }
     }
 }

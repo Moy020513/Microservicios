@@ -134,7 +134,4 @@ public class Cita {
                 .estadoRegistro(EstadoRegistro.ACTIVO)
                 .build();
     }
-
-
-
 }
