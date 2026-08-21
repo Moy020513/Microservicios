@@ -84,10 +84,11 @@ public class MedicoServiceImpl implements MedicoService {
 
         return  medicoMapper.entidadAResponse(medico);
     }
-
+//validar citas activas
     @Override
     public MedicoResponse actualizar(MedicoRequest request, Long id) {
         Medico medico = obtenerMedicoActivoOException(id);
+        validarCitasActivas(id);
         log.info("Actualizando médico con id: {}", id);
         validarCambiosUnicos(request, id);
 
@@ -108,13 +109,10 @@ public class MedicoServiceImpl implements MedicoService {
     }
 
 
-
-
-
     @Override
     public void eliminar(Long id) {
         Medico medico = obtenerMedicoActivoOException(id);
-        validarMedicoSinCitasActivas(id);
+        validarCitasActivas(id);
         log.info("Eliminando médico con id: {}", id);
         medico.eliminar();
         medicoRepository.save(medico);
@@ -188,7 +186,7 @@ public class MedicoServiceImpl implements MedicoService {
                     + request.cedulaProfesional());
     }
 
-    private void validarMedicoSinCitasActivas(Long idMedico){
+    private void validarCitasActivas(Long idMedico){
 
         log.info("Validando que el médico {} no tenga citas confirmadas o en curso", idMedico);
 

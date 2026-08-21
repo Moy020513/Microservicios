@@ -65,7 +65,7 @@ public class PacienteServiceImpl implements PacienteService{
         log.info("Paciente registrado correctamente");
         return pacienteMapper.entidadAResponse(pacientes);
     }
-
+//citas activas
     @Override
     public PacienteResponse actualizar(PacienteRequest request, Long id) {
         Pacientes pacientes = obtenerPacienteActivo(id);
@@ -86,7 +86,7 @@ public class PacienteServiceImpl implements PacienteService{
         );
         return pacienteMapper.entidadAResponse(pacientes);
     }
-
+//citas activas.
     @Override
     public void eliminar(Long id) {
         Pacientes pacientes = obtenerPacienteActivo(id);

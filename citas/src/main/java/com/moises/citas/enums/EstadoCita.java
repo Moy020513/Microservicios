@@ -19,10 +19,6 @@ public enum EstadoCita {
             return EnumSet.of(CONFIRMADA, CANCELADA);
         }
 
-        @Override
-        public DisponibilidadMedico obtenerDisponibilidadMedico() {
-            return DisponibilidadMedico.NO_DISPONIBLE;
-        }
     },
     CONFIRMADA(2L, "Confirmada por el paciente", true, false) {
         @Override
@@ -30,10 +26,6 @@ public enum EstadoCita {
             return EnumSet.of(EN_CURSO, CANCELADA);
         }
 
-        @Override
-        public DisponibilidadMedico obtenerDisponibilidadMedico() {
-            return DisponibilidadMedico.NO_DISPONIBLE;
-        }
     },
     EN_CURSO(3L, "Paciente llegó a su cita", true, false) {
         @Override
@@ -41,10 +33,6 @@ public enum EstadoCita {
             return EnumSet.of(FINALIZADA);
         }
 
-        @Override
-        public DisponibilidadMedico obtenerDisponibilidadMedico() {
-            return DisponibilidadMedico.EN_CONSULTA;
-        }
     },
     FINALIZADA(4L, "Cita finalizada", false, true) {
         @Override
@@ -52,10 +40,6 @@ public enum EstadoCita {
             return Set.of();
         }
 
-        @Override
-        public DisponibilidadMedico obtenerDisponibilidadMedico() {
-            return DisponibilidadMedico.DISPONIBLE;
-        }
     },
     CANCELADA(5L,"Cita cancelada", false, true ) {
         @Override
@@ -63,11 +47,6 @@ public enum EstadoCita {
             return Set.of();
         }
 
-        @Override
-        public DisponibilidadMedico obtenerDisponibilidadMedico() {
-
-            return DisponibilidadMedico.DISPONIBLE;
-        }
     };
 
     private final Long codigo;
@@ -86,7 +65,6 @@ public enum EstadoCita {
 
     public abstract Set<EstadoCita> puedeCambiar();
 
-    public abstract DisponibilidadMedico obtenerDisponibilidadMedico();
 
     public boolean puedeCambiarA(EstadoCita nuevoEstado) {
         return puedeCambiar().contains(nuevoEstado);
