@@ -6,4 +6,8 @@ import com.moises.commons.service.CrudService;
 
 public interface CitaService extends CrudService<CitaRequest, CitaResponse> {
     void actualizarEstadoCita(Long idCita, Long idEstadoCita);
+
+    Boolean CitasActivasPaciente(Long idPaciente);
+
+    Boolean CitasActivasMedico(Long idMedico);
 }
